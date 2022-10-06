@@ -1,3 +1,4 @@
+// TODO: Entropy gathered through mouse movements or keyboard smashing is a parameter to get_entropy()
 import init, {init_threads, contribute, get_entropy} from "./pkg/kate_ptau_rs.js";
 
 console.log("available threads:", navigator.hardwareConcurrency);

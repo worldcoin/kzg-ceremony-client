@@ -1,3 +1,5 @@
+# TODO: Setup CORS in JS with these headers
+
 #!/usr/bin/env python
 try:
     from http import server # Python 3
