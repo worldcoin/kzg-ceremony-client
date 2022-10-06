@@ -10,7 +10,7 @@
 	},
 	"dependencies": {
 		"@heroicons/react": "^1.0.6",
-		"autoprefixer": "^10.4.7",
+		"autoprefixer": "^10.4.11",
 		"connectkit": "^0.0.2",
 		"ethers": "^5.7.1",
 		"next": "12.1.6",
