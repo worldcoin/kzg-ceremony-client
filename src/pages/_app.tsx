@@ -2,9 +2,10 @@ import { SWRConfig } from 'swr'
 import 'tailwindcss/tailwind.css'
 import { ThemeProvider } from 'next-themes'
 import Web3Provider from '@/components/Web3Provider'
+import { api } from '@/lib/api'
 
 const swrConfig = {
-	fetcher: url => fetch(url).then(res => res.json()),
+	fetcher: api,
 }
 
 const App = ({ Component, pageProps }) => {

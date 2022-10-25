@@ -1,15 +1,61 @@
 import useSWR from 'swr'
-import { FC } from 'react'
+import { FC, useCallback, useEffect } from 'react'
 import useSWRImmutable from 'swr/immutable'
+import { useRouter } from 'next/router'
+import useAuthStore, { AuthResponse, AuthStore } from '@/store/authStore'
+import { api } from '@/lib/api'
+import useContributionStore, { ContributionStore, CONTRIBUTION_STATE } from '@/store/contributionStore'
+
+const getAuthParams = (store: AuthStore) => ({
+	setAuthResponse: store.setAuthResponse,
+	session_id: store.authResponse?.session_id,
+	isAuthenticated: !!store.authResponse?.session_id,
+})
+
+const getContributionParams = (store: ContributionStore) => ({ setStatus: store.setStatus })
 
 const Home: FC = () => {
-	const { data: status, isLoading } = useSWR('/api/info/status')
+	const router = useRouter()
+	const { data: status, isLoading } = useSWR('/info/status')
+	const { setStatus } = useContributionStore(getContributionParams)
+	const { isAuthenticated, session_id, setAuthResponse } = useAuthStore(getAuthParams)
+
 	const { data: auth_urls, isLoading: isLoadingAuth } = useSWRImmutable(
-		() => `/api/auth/request_link?redirect_to=${window.location.href}`,
-		{
-			revalidateOnMount: true,
-		}
+		() => `/auth/request_link?redirect_to=${window.location.href}`,
+		{ revalidateOnMount: true, isPaused: () => isAuthenticated }
 	)
+
+	const onContribute = useCallback(
+		(res: { code: CONTRIBUTION_STATE; message: string }) => {
+			setStatus(res.code)
+			console.log('contribute response:', res)
+		},
+		[setStatus]
+	)
+
+	useEffect(() => {
+		if (!router.query.session_id || isAuthenticated) return
+
+		setAuthResponse(router.query as AuthResponse)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [router.query])
+
+	useEffect(() => {
+		if (!session_id) return
+
+		const tryContribute = async () => {
+			onContribute(
+				await api<{ code: CONTRIBUTION_STATE; message: string }>('/lobby/try_contribute', 'POST', {
+					session_id,
+				})
+			)
+		}
+
+		tryContribute()
+
+		const interval = setInterval(tryContribute, 30000)
+		return () => clearInterval(interval)
+	}, [onContribute, session_id])
 
 	return (
 		<div className="space-y-10 p-10">
